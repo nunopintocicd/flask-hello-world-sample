@@ -31,7 +31,9 @@ jobs:
     - name: Lint
       run: |
         pylint . --rcfile=.pylintrc --output-format=parseable --fail-under=8 --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}"  | tee pylint.log || echo "pylint exited with $?"
-
+    - name: SAST
+      uses: michelleamesquita/sast-validator@v40
+      
     - name: SonarQube scan
       uses: sonarsource/sonarqube-scan-action@v2.3.0
       env:
