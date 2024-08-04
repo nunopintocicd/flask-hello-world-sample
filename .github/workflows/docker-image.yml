@@ -37,7 +37,12 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      
+        
+    - name: Login to DockerHub Registry
+      run: docker login -u ${{ secrets.ARTIFACTORY_USERNAME }} -p ${{ secrets.ARTIFACTORY_PASSWORD }} ${{ secrets.ARTIFACTORY_HOST }}
 
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build . --file Dockerfile --tag ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:latest
+
+    - name: Push Docker Image
+      run: docker push ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:latest
