@@ -9,7 +9,7 @@ on:
 permissions:
   id-token: write # This is required for requesting the JWT
   contents: read # This is required for actions/checkout
-  
+
 jobs:
 
   build:
@@ -47,10 +47,10 @@ jobs:
         password: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{ github.sha }}
+      run: docker build . --file Dockerfile --tag ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{  github.ref_name }}
 
     - name: Push Docker Image
-      run: docker push ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{ github.sha }}
+      run: docker push ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{  github.ref_name }}
 
   aws:
     runs-on: ubuntu-latest
@@ -62,7 +62,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: arn:aws:iam::355948091293:role/test_nuno_gitlab
-        aws-region: 'eu-west-1'
+        aws-region: eu-west-1
     - name: Scan DynamoDB table
       run: aws dynamodb scan --table-name tenant_status
 
@@ -83,10 +83,10 @@ jobs:
       run: helm lint ./helm-chart-directory
 
     - name: Package Helm chart
-      run: helm package ./helm-chart-directory --version ${{ github.sha }}
+      run: helm package ./helm-chart-directory --version ${{  github.ref_name }}
 
     - name: Index Helm repository
       run: helm repo index ./ --url https://art.pmideep.com/artifactory/cst-helm-dev
 
     - name: Upload Helm chart
-      run: curl -T flask-hello-world-sample-github-${{ github.sha }}.tgz "https://art.pmideep.com/artifactory/cst-helm-dev/flask-hello-world-sample-github-${{ github.sha }}.tgz" --user ${{ secrets.HELM_REPO_USER }}:${{ secrets.HELM_REPO_PASSWORD }}
+      run: curl -T flask-hello-world-sample-github-${{  github.ref_name }}.tgz "https://art.pmideep.com/artifactory/cst-helm-dev/flask-hello-world-sample-github-${{  github.ref_name }}.tgz" --user ${{ secrets.HELM_REPO_USER }}:${{ secrets.HELM_REPO_PASSWORD }}
