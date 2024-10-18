@@ -3,9 +3,8 @@ name: Docker Image CI
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - '*'
 
 jobs:
 
@@ -44,7 +43,50 @@ jobs:
         password: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:latest
+      run: docker build . --file Dockerfile --tag ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{ github.sha }}
 
     - name: Push Docker Image
-      run: docker push ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:latest
+      run: docker push ${{ secrets.ARTIFACTORY_HOST }}/cst-docker-dev/flask-hello-world-sample-github:${{ github.sha }}
+
+  aws:
+    runs-on: ubuntu-latest
+    needs: build
+    dynamodb_scan:
+      runs-on: ubuntu-latest
+      needs: unit_linter
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: 'arn:aws:iam::355948091293:role/test_nuno_gitlab'
+          aws-region: 'eu-west-1'
+
+      - name: Scan DynamoDB table
+        run: aws dynamodb scan --table-name tenant_status
+
+  cd:
+    runs-on: ubuntu-latest
+    needs: aws
+        steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install Helm
+      run: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        sudo apt-get install -y curl
+
+    - name: Lint Helm chart
+      run: helm lint ./helm-chart-directory
+
+    - name: Package Helm chart
+      run: helm package ./helm-chart-directory --version ${{ github.sha }}
+
+    - name: Index Helm repository
+      run: helm repo index ./ --url https://art.pmideep.com/artifactory/cst-helm-dev
+
+    - name: Upload Helm chart
+      run: curl -T flask-hello-world-sample-github-${{ github.sha }}.tgz "https://art.pmideep.com/artifactory/cst-helm-dev/flask-hello-world-sample-github-${{ github.sha }}.tgz" --user ${{ secrets.HELM_REPO_USER }}:${{ secrets.HELM_REPO_PASSWORD }}
