@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flask-api-metrics
+spec:
+  containers:
+  - name: flask-api-metrics-container
+    image: IMAGE_PLACEHOLDER
+    ports:
+    - containerPort: 5000
