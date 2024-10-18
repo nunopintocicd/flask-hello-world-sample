@@ -1,5 +1,5 @@
 apiVersion: v2
-name: flask-hello-gitlab
+name: flask-hello-world-sample-github
 description: A Helm chart for deploying Flask Hello GitLab application
 version: 0.1.0
 appVersion: "1.0"
