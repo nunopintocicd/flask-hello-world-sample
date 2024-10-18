@@ -69,6 +69,7 @@ jobs:
 
   cd:
     runs-on: ubuntu-latest
+    environment: staging
     needs: aws
         steps:
     - name: Checkout code
